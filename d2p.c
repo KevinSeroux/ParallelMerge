@@ -7,8 +7,6 @@
 #include <omp.h>
 #include <unistd.h>
 
-//#define GRAPH
-
 void print(int size, int const integers[])
 {
 	for(int i = 0; i < size; i++)
