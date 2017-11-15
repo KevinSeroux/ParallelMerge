@@ -196,6 +196,8 @@ void start_merge(
 	int idxStartOut
 )
 {
+	omp_set_nested(1);
+
 #pragma omp parallel
 	{
 #pragma omp single nowait
