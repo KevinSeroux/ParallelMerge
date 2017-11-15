@@ -1,4 +1,3 @@
-#include "stdin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -13,32 +12,26 @@ void print(int size, int const integers[])
 	printf("\n");
 }
 
-bool init(int *pSize, int **pIn, int **pOut)
-{
+int init(int **in, int **out) {
 	int size;
-	int* in = 0;
-	if(!allocIntFromStdin(&size, &in))
-	{
-		perror("Cannot allocate input array");
-		return false;
-	}
+	fscanf(stdin, "%d", &size);
 
-	int* out = malloc(sizeof(int) * 2 * size);
-	if(out == NULL)
-	{
-		perror("Cannot allocate final array");
-		return false;
-	}
+	int *tmp = (int *) malloc(sizeof(int)*2*size);
+	if (!tmp) return 0;
 
-	*pSize = size;
-	*pIn = in;
-	*pOut = out;
-	return true;
+	int i=0;
+	while (fscanf(stdin, "%d", &tmp[i]) == 1) i++;
+		*in = tmp;
+
+	*out = (int *) malloc(sizeof(int)*2*size);
+	if (!out) return 0;
+
+	return size;
 }
 
 void destroy(int *in, int *out)
 {
-	freeInt(in);
+	free(in);
 	free(out);
 }
 
@@ -167,13 +160,14 @@ int main()
 {
 	int size;
 	int *in, *out;
-	if(!init(&size, &in, &out))
+	size = init(&in, &out);
+	if(!size)
 	{
 		perror("Init failed");
 		return EXIT_FAILURE;
 	}
-	// print(size, in);
-	// print(size, in + size);
+	print(size, in);
+	print(size, in + size);
 
 #ifdef GRAPH
 	fprintf(stderr, "digraph g {\n");
@@ -188,13 +182,13 @@ int main()
 	double end = omp_get_wtime();
 	double duration = end - begin;
 
-	// print(size * 2, out);
+	print(size * 2, out);
 
 #ifdef GRAPH
-	fprintf(stderr, "}");
+	fprintf(stderr, "}\n//");
 #endif
 
-	fprintf(stderr, "//Time: %lf seconds\n", duration);
+	fprintf(stderr, "Time: %lf seconds\n", duration);
 
 	destroy(in, out);
 	return EXIT_SUCCESS;

@@ -1,4 +1,3 @@
-#include "stdin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -15,32 +14,26 @@ void print(int size, int const integers[])
 	printf("\n");
 }
 
-// bool init(int *pSize, int **pIn, int **pOut)
-// {
-// 	int size;
-// 	int* in = 0;
-// 	if(!allocIntFromStdin(&size, &in))
-// 	{
-// 		perror("Cannot allocate input array");
-// 		return false;
-// 	}
+int init(int **in, int **out) {
+	int size;
+	fscanf(stdin, "%d", &size);
 
-// 	int* out = malloc(sizeof(int) * 2 * size);
-// 	if(out == NULL)
-// 	{
-// 		perror("Cannot allocate final array");
-// 		return false;
-// 	}
+	int *tmp = (int *) malloc(sizeof(int)*2*size);
+	if (!tmp) return 0;
 
-// 	*pSize = size;
-// 	*pIn = in;
-// 	*pOut = out;
-// 	return true;
-// }
+	int i=0;
+	while (fscanf(stdin, "%d", &tmp[i]) == 1) i++;
+		*in = tmp;
+
+	*out = (int *) malloc(sizeof(int)*2*size);
+	if (!out) return 0;
+
+	return size;
+}
 
 void destroy(int *in, int *out)
 {
-	freeInt(in);
+	free(in);
 	free(out);
 }
 
@@ -181,9 +174,6 @@ void merge(
 #endif
 		}
 	}
-
-	// Debugging purpose: sleep to make appear all the threads in htop
-	//sleep(1);
 }
 
 void start_merge(
@@ -193,13 +183,12 @@ void start_merge(
 	int idxStartArr2,
 	int idxEndArr2,
 	int out[],
-	int idxStartOut,
-	int threadsCount
+	int idxStartOut
 )
 {
 	omp_set_nested(1);
 
-#pragma omp parallel num_threads(threadsCount)
+#pragma omp parallel
 	{
 #pragma omp single nowait
 		{
@@ -222,36 +211,11 @@ void start_merge(
 	}
 }
 
-int init(FILE *f, int **in, int **out) {
-  int size;
-  fscanf(f, "%d", &size);
-
-  int *tmp = (int *) malloc(sizeof(int)*2*size);
-	if (!tmp) return 0;
-
-  int i=0;
-  while (fscanf(f, "%d", &tmp[i]) == 1) i++;
-  *in = tmp;
-
-  *out = (int *) malloc(sizeof(int)*2*size);
-	if (!out) return 0;
-
-  return size;
-}
-
 int main()
 {
 	int size;
 	int *in, *out;
-	double start_time;
-	// if(!init(&size, &in, &out))
-	// {
-	// 	perror("Init failed");
-	// 	return EXIT_FAILURE;
-	// } 
-	// print(size, in);
-	// print(size, in + size);
-	size = init(stdin, &in, &out);
+	size = init(&in, &out);
 	if (!size) {
 		perror("Init failed");
 		return EXIT_FAILURE;
@@ -262,32 +226,18 @@ int main()
 	fprintf(stderr, "\tnode [colorscheme=rdylgn11 style=filled]\n");
 #endif
 
-	// double begin = omp_get_wtime();
-	// start_merge(in, 0, size - 1, size, 2 * size - 1, out, 0);
-	// double end = omp_get_wtime();
-	// double duration = end - begin;
+	double begin = omp_get_wtime();
+	start_merge(in, 0, size - 1, size, 2 * size - 1, out, 0);
+	double end = omp_get_wtime();
+	double duration = end - begin;
 
-	int threadsCount[8] = {1, 2, 4, 8, 12, 16, 24, 48};
-	for (int i=0;i<8;i++) {
+ 	print(size * 2, out);
 
-		start_time = omp_get_wtime();
-		start_merge(in, 0, size - 1, size, 2 * size - 1, out, 0, threadsCount[i]);
-		double duration = omp_get_wtime() - start_time;
+ #ifdef GRAPH
+ 	fprintf(stderr, "}\n//");
+ #endif
 
-		// print(size * 2, out);
-
-		printf("threads count: %d\n", threadsCount[i]);
-		printf("time: %f s\n", duration);
-		printf("----------------------\n");
-	}
-
-// 	print(size * 2, out);
-
-// #ifdef GRAPH
-// 	fprintf(stderr, "}\n");
-// #endif
-
-// 	fprintf(stderr, "//Time: %lf seconds\n", duration);
+ 	fprintf(stderr, "Time: %lf seconds\n", duration);
 
 	destroy(in, out);
 	return EXIT_SUCCESS;
