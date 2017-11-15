@@ -172,8 +172,8 @@ int main()
 		perror("Init failed");
 		return EXIT_FAILURE;
 	}
-	print(size, in);
-	print(size, in + size);
+	// print(size, in);
+	// print(size, in + size);
 
 #ifdef GRAPH
 	fprintf(stderr, "digraph g {\n");
@@ -188,7 +188,7 @@ int main()
 	double end = omp_get_wtime();
 	double duration = end - begin;
 
-	print(size * 2, out);
+	// print(size * 2, out);
 
 #ifdef GRAPH
 	fprintf(stderr, "}");
