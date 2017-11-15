@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
+#include <omp.h>
 
 void print(int size, int const integers[])
 {
@@ -178,14 +179,14 @@ int main()
 	fprintf(stderr, "digraph g {\n");
 #endif
 
-	clock_t begin = clock();
+	double begin = omp_get_wtime();
 #ifdef GRAPH
 	merge(in, 0, size - 1, size, 2 * size - 1, out, 0, -1, 0);
 #else
 	merge(in, 0, size - 1, size, 2 * size - 1, out, 0);
 #endif
-	clock_t end = clock();
-	clock_t duration = (end - begin) / (CLOCKS_PER_SEC / 1000);
+	double end = omp_get_wtime();
+	double duration = end - begin;
 
 	print(size * 2, out);
 
@@ -193,7 +194,7 @@ int main()
 	fprintf(stderr, "}");
 #endif
 
-	fprintf(stderr, "//Time: %ld ms\n", duration);
+	fprintf(stderr, "//Time: %lf seconds\n", duration);
 
 	destroy(in, out);
 	return EXIT_SUCCESS;
