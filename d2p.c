@@ -142,55 +142,81 @@ void merge(
 		}
 #endif
 
-		// Parallel version
-#pragma omp parallel num_threads(2)
+#pragma omp task
 		{
-#pragma omp single nowait
-			{
-#pragma omp task
-				{
 #ifdef GRAPH
-					merge(
-						in,
-						idxStartArr1, idxPivotArr1 - 1,
-						idxStartArr2, idxPivotArr2 - 1,
-						out, idxStartOut,
-						node, myNextNode1
-					);
+			merge(
+				in,
+				idxStartArr1, idxPivotArr1 - 1,
+				idxStartArr2, idxPivotArr2 - 1,
+				out, idxStartOut,
+				node, myNextNode1
+			);
 #else
-					merge(
-						in,
-						idxStartArr1, idxPivotArr1 - 1,
-						idxStartArr2, idxPivotArr2 - 1,
-						out, idxStartOut
-					);
+			merge(
+				in,
+				idxStartArr1, idxPivotArr1 - 1,
+				idxStartArr2, idxPivotArr2 - 1,
+				out, idxStartOut
+			);
 #endif
-				}
+		}
 #pragma omp task
-				{
+		{
 #ifdef GRAPH
-					merge(
-						in,
-						idxPivotArr1 + 1, idxEndArr1,
-						idxPivotArr2, idxEndArr2,
-						out, idxPivotOut + 1,
-						node, myNextNode2
-					);
+			merge(
+				in,
+				idxPivotArr1 + 1, idxEndArr1,
+				idxPivotArr2, idxEndArr2,
+				out, idxPivotOut + 1,
+				node, myNextNode2
+			);
 #else
-					merge(
-						in,
-						idxPivotArr1 + 1, idxEndArr1,
-						idxPivotArr2, idxEndArr2,
-						out, idxPivotOut + 1
-					);
+			merge(
+				in,
+				idxPivotArr1 + 1, idxEndArr1,
+				idxPivotArr2, idxEndArr2,
+				out, idxPivotOut + 1
+			);
 #endif
-				}
-			}
 		}
 	}
 
 	// Debugging purpose: sleep to make appear all the threads in htop
 	//sleep(1);
+}
+
+void start_merge(
+	int const in[],
+	int idxStartArr1,
+	int idxEndArr1,
+	int idxStartArr2,
+	int idxEndArr2,
+	int out[],
+	int idxStartOut
+)
+{
+#pragma omp parallel
+	{
+#pragma omp single nowait
+		{
+			merge(
+				in,
+				idxStartArr1,
+				idxEndArr1,
+				idxStartArr2,
+				idxEndArr2,
+				out,
+#ifdef GRAPH
+				idxStartOut,
+				-1,
+				0
+#else
+				idxStartOut
+#endif
+			);
+		}
+	}
 }
 
 int main()
@@ -211,11 +237,7 @@ int main()
 #endif
 
 	double begin = omp_get_wtime();
-#ifdef GRAPH
-	merge(in, 0, size - 1, size, 2 * size - 1, out, 0, -1, 0);
-#else
-	merge(in, 0, size - 1, size, 2 * size - 1, out, 0);
-#endif
+	start_merge(in, 0, size - 1, size, 2 * size - 1, out, 0);
 	double end = omp_get_wtime();
 	double duration = end - begin;
 
