@@ -135,7 +135,7 @@ void merge(
 		}
 #endif
 
-#pragma omp task
+#pragma omp task if(sizeArr1 > 10000 && sizeArr2 > 10000)
 		{
 #ifdef GRAPH
 			merge(
@@ -154,7 +154,7 @@ void merge(
 			);
 #endif
 		}
-#pragma omp task
+#pragma omp task if(sizeArr1 > 10000 && sizeArr2 > 10000)
 		{
 #ifdef GRAPH
 			merge(
