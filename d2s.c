@@ -166,8 +166,6 @@ int main()
 		perror("Init failed");
 		return EXIT_FAILURE;
 	}
-	print(size, in);
-	print(size, in + size);
 
 #ifdef GRAPH
 	fprintf(stderr, "digraph g {\n");
